@@ -1,7 +1,6 @@
-package Portal2D;
+package movementguy;
 
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -36,7 +35,7 @@ public class Mainpanel extends JPanel implements ActionListener, KeyListener, Mo
 	Scanner enter = new Scanner(System.in);
 	ArrayList<Block> blocklistactive = new ArrayList<Block>();
 	ArrayList<Point> check = new ArrayList<Point>();
-	static int level = 9; 
+	static int level; 
 	Games game = new Games(level);
 	int cheatcode = 0;
 	
@@ -47,7 +46,6 @@ public class Mainpanel extends JPanel implements ActionListener, KeyListener, Mo
 		atlas = new Lemming((int) game.spawnpoint.x,(int) game.spawnpoint.y);
 		Bportal = new Portal("Blue");
 		Oportal = new Portal("Orange");
-		
 		
 		this.setFocusable(true); //Focus on this panel so Keylistener and Mouselistener can work
 		this.requestFocus();
@@ -72,25 +70,27 @@ public class Mainpanel extends JPanel implements ActionListener, KeyListener, Mo
         	g.setColor(new Color(0,0,0));
         	g.drawOval((int)check.get(i).x-5, (int)check.get(i).y-5, 10, 10);
         }
-        chell.playerdraw(g); // all object draw methods are in their respective classes
-        atlas.lemmingdraw(g);
+        chell.draw(g); // all object draw methods are in their respective classes
+        atlas.draw(g);
         Bportal.draw(g);
         Oportal.draw(g);
-        
-        if (Mainpanel.level == 0) {
-	    	g.setFont(new Font ("verdana", 2, 30));
-	    	g.setColor(Colors.darkGrey);
-	    	g.drawString("Use WASD, ZQSD or the arrows to move Chell", 100, 100);
-	    	g.drawString("Use E to start or stop Atlas", 100, 150);
-	    	g.drawString("Use your mouse to place portals", 100, 200);
-	    	g.setColor(Colors.lavaRed);
-	    	g.drawString("The lava kills you and Atlas", 100, 500);
-	    	g.setColor(Colors.darkGrey);
-	    	g.drawString("Portals don't work on dark walls", 350, 450);
-	    	g.setColor(Colors.nuclearGreen);
-	    	g.drawString("Reach the green zone to win", 540, 400);
-	    }
     }
+
+	public static void main(String[] args) {
+		Mainframe f = new Mainframe(); // basic frame setup
+		f.setSize(1000,750);
+		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    f.setTitle("movement");
+	    f.setLocation(100,100);
+	    JPanel menupanel = new Menupanel(f);
+	    JPanel hoofpaneel = new Mainpanel(f);
+	    f.game = hoofpaneel;
+	    f.menu = menupanel;
+	    f.add(menupanel);
+	    f.setResizable(false);
+	    f.setVisible(true);
+	    
+	}
 	
 	
 	class UpdateTimerTask extends TimerTask {
@@ -98,8 +98,8 @@ public class Mainpanel extends JPanel implements ActionListener, KeyListener, Mo
 			checkLevel();
 			 repaint(); // what will be done every 20ms
 			 tick++;
-			 chell.playermove(Bportal, Oportal,tick,blocklistactive);
-			 atlas.Lemmingmove(Bportal, Oportal,tick,blocklistactive);
+			 chell.move(Bportal, Oportal,tick,blocklistactive);
+			 atlas.move(Bportal, Oportal,tick,blocklistactive);
 			 int ButtonCheck = 0;
 			 for (int i = 0; i <blocklistactive.size();i++ ) {
 				 if (blocklistactive.get(i).isOnButton) {
@@ -122,16 +122,19 @@ public class Mainpanel extends JPanel implements ActionListener, KeyListener, Mo
 		if (levelChanged) {
 
 			blocklistactive.clear();
-			game = new Games(level);
+			game = new Games(Mainpanel.level);
 			chell.spawnpoint = game.spawnpoint;
 			atlas.spawnpoint = game.spawnpoint;
 			blocklistactive = Games.level;
+			chell.reset();
+			atlas.reset();
 			levelChanged = false;
-			changePortals();
 		}
 		
 	}
 
+	
+	
 	public void changePortals() {
 		if (Oportal.color.equals("Orange")) {
 			Oportal.color = "Red";

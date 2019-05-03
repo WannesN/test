@@ -1,158 +1,271 @@
-package movementguy;
+package Portal2D;
 
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public class Games {
-	int index;
-	Point spawnpoint;
-	static ArrayList<Block> level = new ArrayList<Block>();
-	boolean portalable;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+
+
+
+
+public class Mainpanel extends JPanel implements ActionListener, KeyListener, MouseListener {
+	Mainframe f;
+	public Player chell;
+	public Lemming atlas;
+	public Portal Bportal;
+	public Portal Oportal;
+	public int tick = 0;
+	int floory;
+	static boolean levelChanged = true;
+	static boolean paused = false;
+	static boolean someoneOnButton = false;
+
+	Scanner enter = new Scanner(System.in);
+	ArrayList<Block> blocklistactive = new ArrayList<Block>();
+	ArrayList<Point> check = new ArrayList<Point>();
+	static int level = 9; 
+	Games game = new Games(level);
+	int cheatcode = 0;
 	
-	public void kader(boolean portalable) {
-		if(portalable) {
-			Block cornerLU = new Block(-190,-190,200,200);//left up = corner
-			cornerLU.special = "allergic";
-			cornerLU.portalable = false;
-			level.add(cornerLU);
-			
-			Block cornerRU = new Block(980,-190,200,200);//right up = corner
-			cornerRU.special = "allergic";
-			cornerRU.portalable = false;
-			level.add(cornerRU);
-			
-			Block cornerLD = new Block(-190,700,200,200);//left up = corner
-			cornerLD.special = "allergic";
-			cornerLD.portalable = false;
-			level.add(cornerLD);
-			
-			Block cornerRD = new Block(980,700,200,200);//left up = corner
-			cornerRD.special = "allergic";
-			cornerRD.portalable = false;
-			level.add(cornerRD);
-			
-			level.add(new Block(10,-190,600,200));//up = roof
-			level.add(new Block(380,-190,600,200));
-			
-			level.add(new Block(10,700,600,200));//down = floor
-			level.add(new Block(380,700,600,200));
-			
-			level.add(new Block(-190,10,200,400));//left = wall
-			level.add(new Block(-190,300,200,400));
-			
-			level.add(new Block(980,10,200,400));//right = wall
-			level.add(new Block(980,300,200,400));
+	public Mainpanel(Mainframe f) {
+		this.f = f;
+		floory = this.getHeight();
+		chell = new Player((int) game.spawnpoint.x,(int) game.spawnpoint.y); //create player and portal objects
+		atlas = new Lemming((int) game.spawnpoint.x,(int) game.spawnpoint.y);
+		Bportal = new Portal("Blue");
+		Oportal = new Portal("Orange");
+		
+		
+		this.setFocusable(true); //Focus on this panel so Keylistener and Mouselistener can work
+		this.requestFocus();
+		
+		this.addKeyListener(this);
+		this.addMouseListener(this);
+		
+		Timer timer = new Timer();
+		timer.scheduleAtFixedRate(new UpdateTimerTask(),0,20); // set up timer, with 20 ms period
+		
+	}
+	public void actionPerformed(ActionEvent e) { //possibly useless?
+        repaint();
+        }
+	
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        for (int i = 0; i <blocklistactive.size();i++ ) {
+        	blocklistactive.get(i).draw(g,tick);
+        }
+        for (int i = 0; i <check.size();i++ ) { // draw trail to portalshot 
+        	g.setColor(new Color(0,0,0));
+        	g.drawOval((int)check.get(i).x-5, (int)check.get(i).y-5, 10, 10);
+        }
+        chell.playerdraw(g); // all object draw methods are in their respective classes
+        atlas.lemmingdraw(g);
+        Bportal.draw(g);
+        Oportal.draw(g);
+        
+        if (Mainpanel.level == 0) {
+	    	g.setFont(new Font ("verdana", 2, 30));
+	    	g.setColor(Colors.darkGrey);
+	    	g.drawString("Use WASD, ZQSD or the arrows to move Chell", 100, 100);
+	    	g.drawString("Use E to start or stop Atlas", 100, 150);
+	    	g.drawString("Use your mouse to place portals", 100, 200);
+	    	g.setColor(Colors.lavaRed);
+	    	g.drawString("The lava kills you and Atlas", 100, 500);
+	    	g.setColor(Colors.darkGrey);
+	    	g.drawString("Portals don't work on dark walls", 350, 450);
+	    	g.setColor(Colors.nuclearGreen);
+	    	g.drawString("Reach the green zone to win", 540, 400);
+	    }
+    }
+	
+	
+	class UpdateTimerTask extends TimerTask {
+		public void run() {
+			checkLevel();
+			 repaint(); // what will be done every 20ms
+			 tick++;
+			 chell.playermove(Bportal, Oportal,tick,blocklistactive);
+			 atlas.Lemmingmove(Bportal, Oportal,tick,blocklistactive);
+			 int ButtonCheck = 0;
+			 for (int i = 0; i <blocklistactive.size();i++ ) {
+				 if (blocklistactive.get(i).isOnButton) {
+					 ButtonCheck++;
+				 }
+			 }
+			 if (!(ButtonCheck == 0)) {
+				 someoneOnButton = true;
+			 } else {
+				 someoneOnButton = false;
+			 }
+			 for (int i = 0; i <blocklistactive.size();i++ ) {
+				 blocklistactive.get(i).isOnButton = false;
+			 }
+			 }
 		}
-		else {
-			level.add(new Block(-190,-190,200,200, "allergic"));//left up = corner
-			level.add(new Block(10,-190,1000,200, "allergic"));//up = roof
-			level.add(new Block(980,-190,200,200, "allergic"));//right up = corner
-			level.add(new Block(-190,700,200,200, "allergic"));//left down = corner
-			level.add(new Block(10,700,1000,200, "allergic"));//down = floor
-			level.add(new Block(980,700,200,200, "allergic"));//right down = corner
-			level.add(new Block(-190,10,200,700, "allergic"));//left = wall
-			level.add(new Block(980,10,200,700, "allergic"));//right = wall
+	
+	public void checkLevel() {
+		
+		if (levelChanged) {
+
+			blocklistactive.clear();
+			game = new Games(level);
+			chell.spawnpoint = game.spawnpoint;
+			atlas.spawnpoint = game.spawnpoint;
+			blocklistactive = Games.level;
+			levelChanged = false;
+			changePortals();
 		}
-			
+		
+	}
+
+	public void changePortals() {
+		if (Oportal.color.equals("Orange")) {
+			Oportal.color = "Red";
+		} else {
+			Oportal.color = "Orange";
+		}
+		if (Bportal.color.equals("Blue")) {
+			Bportal.color = "Green";
+		} else {
+			Bportal.color = "Blue";
+		}
+		Oportal.checkColors();
+		Bportal.checkColors();
 	}
 	
-	Games(int index) {
-		this.index = index;
+	@Override
+	public void keyPressed(KeyEvent e) { //keypress
+		int button = e.getKeyCode();
 		
-		if (index == 0) { //tutorial
-			spawnpoint = new Point (15, 700);
-			
-			level.add(new Block(150, 600, 50, 100));
-			level.add(new Block(450, 550, 50, 150));			
-			level.add(new Block(750, 500, 50, 200));			
-			level.add(new Block(200, 650, 250, 50, "lava"));
-			level.add(new Block(500, 650, 250, 50));
-			level.add(new Block(500, 600, 250, 50, "allergic"));
-			level.add(new Block(800, 600, 200, 100));
-			level.add(new Block(800, 550, 180, 50, "endzone"));
-			kader(true);
-		}
-		else if(index == 1) {
-			spawnpoint = new Point(15,700);
-			kader(true);
-			level.add(new Block(100,697, 700, 50,"lava"));
-			level.add(new Block(800,697, 50, 50,"endzone"));
-			level.add(new Block(850,697, 200, 50, "lava"));
+		//for use arrows
+		if (button == KeyEvent.VK_RIGHT ) {
+			chell.moveset("right"); }
+		if (button == KeyEvent.VK_LEFT ) {
+			chell.moveset("left"); }
+		if (button == KeyEvent.VK_DOWN ) {
+			chell.moveset("down"); }
+		if (button == KeyEvent.VK_UP ) {
+			chell.moveset("up"); }
 		
+		//for use Z,Q,S,D (azerty)
+		if (button == KeyEvent.VK_D ) { //to the right
+			chell.moveset("right"); }
+		if (button == KeyEvent.VK_Q ) { //to the left
+			chell.moveset("left"); }
+		if (button == KeyEvent.VK_S ) { //down
+			chell.moveset("down"); }
+		if (button == KeyEvent.VK_Z ) { //up
+			chell.moveset("up"); }
+		
+		//for use W,A,S,D (querty)
+		if (button == KeyEvent.VK_A ) { //to the left
+			chell.moveset("left"); }
+		if (button == KeyEvent.VK_W ) { //up
+			chell.moveset("up"); }
+		//S,D same as azerty
+		
+//		//waiting when dead or won
+		if (button == KeyEvent.VK_ENTER) {
+			paused = false;
+			chell.revive();
+			atlas.revive();
+			checkLevel();
+			chell.reset();
+			atlas.reset();
+			Oportal.x = -50;
+			Oportal.y = -50;
+			Bportal.x = -50;
+			Bportal.y = -50;
 		}
-		else if (index == 2) {
-			spawnpoint = new Point(15,700);
-			kader(true);	
-			level.add(new Block(100, 500, 50, 200));
-			level.add(new Block(500, 697, 50, 50, "lava"));
-			level.add(new Block(600, 697, 380, 50, "lava"));
-			level.add(new Block(470, 200, 50, 400));
-			level.add(new Block(100, 200, 400, 50));
-			level.add(new Block(50, 0, 50, 250));
-			level.add(new Block(200, 200, 75, 20, "endzone"));
+		
+		if (button == KeyEvent.VK_E) {
+			atlas.stop(); }
+		
+		if (button == KeyEvent.VK_ESCAPE) {
+			f.changepanel(2);
+			chell.reset();
+			atlas.reset();
 		}
-		else if (index == 3) {
-			spawnpoint = new Point(15,100);
-			level.add(new Block(0,0,100,50));
-			level.add(new Block(300,10,50,50));
-			level.add(new Block(300,50,50,50));
-			level.add(new Block(0,550,100,100));
-			level.add(new Block(300,100,100,50,"allergic"));
-			level.add(new Block(0,150,100,400,"allergic"));
-			level.add(new Block(0,650,100,400,"allergic"));
-			level.add(new Block(400,250,100,900,"allergic"));
-			level.add(new Block(750,250,50,900,"allergic"));
-			level.add(new Block(800,250,50,50,"allergic"));
-			level.add(new Block(800,400,50,450,"allergic"));
-			level.add(new Block(850,450,75,50,"allergic"));
-			level.add(new Block(900,360,100,50,"allergic"));
-			level.add(new Block(200,0,100,300,"allergic"));
-			level.add(new Block(100,650,300,100));
-			level.add(new Block(800,300,50,100));
-			level.add(new Block(500,650,250,100,"lava"));
-			level.add(new Block(850,650,150,100,"endzone"));
-			kader(false);
-		}
-		else if (index == 4) {
-			spawnpoint = new Point(15,700);
-			kader(true);
-			level.add(new Block(475,300,50,500));
-			level.add(new Block(150,550,700,50));
-			level.add(new Block(100,200,200,50));
-			level.add(new Block(600,200,200,50));
-			level.add(new Block(700, 700, 75, 20, "endzone"));
-			level.add(new Block(800, 697, 200, 50, "lava"));
-			
-		}
-		else if (index == 5) {
-			spawnpoint = new Point(15,700);
-			kader(true);		
-			level.add(new Block(250,550,600,50));
-			level.add(new Block(800, 697, 200, 50, "lava"));
-			level.add(new Block(250,550,50,102, "allergic"));
-			level.add(new Block(400, 697, 200, 50, "lava"));
-			level.add(new Block(700, 700, 75, 20, "endzone"));
-		}
-		else if (index == 6) { //intro to button
-			spawnpoint = new Point(15,700);
-			kader(true);
-			level.add(new Block(200, 700, 50, 10, "button"));
-			level.add(new Block(600, 10, 50, 690, "buttonListener"));
-			level.add(new Block(850, 700, 100, 50, "endzone"));
-		}
-		else if (index == 7) {
-			spawnpoint = new Point(20, 100);
-			
-			level.add(new Block(0, 200, 200, 50));
-			level.add(new Block(10, 550, 600, 200));
-			level.add(new Block(520, 550, 600, 200));
-			level.add(new Block(100, 200, 50, 10, "button"));
-			level.add(new Block(200, 200, 780, 50, "buttonListener"));
-			level.add(new Block(10, 500, 970, 50, "endzone"));
-			kader(true);
-		} 
-		else {
-			spawnpoint = new Point(15, 700);
-			kader(true);
-		}
+	
+	//for cheatcode
+			if (button == KeyEvent.VK_MINUS) { //-
+				cheatcode = cheatcode +1;
+			}
+			if (button == KeyEvent.VK_CIRCUMFLEX) { //^
+				cheatcode = cheatcode +1;
+			}
+			if (button == KeyEvent.VK_DOLLAR) { //$
+				cheatcode = cheatcode +1;
+			}
+			if (cheatcode ==3) {
+				cheatcode = 0;
+//				System.out.println("Cheatcode is started"); //for control
+				Cheatcode.cheatcode();
+			}
+
+		}	
+
+	
+	@Override
+	public void keyReleased(KeyEvent e) { //keyrelease
+		int button = e.getKeyCode();
+		
+		if (button == KeyEvent.VK_RIGHT ) {
+			chell.stop("right"); }//the cake is a lie
+		if (button == KeyEvent.VK_LEFT ) {
+			chell.stop("left"); }
+		
+		if (button == KeyEvent.VK_D ) {
+			chell.stop("right"); }
+		if (button == KeyEvent.VK_Q ) {
+			chell.stop("left"); }
+		if (button == KeyEvent.VK_A ) {
+			chell.stop("left"); }
+
 	}
-}
+	@Override
+	public void keyTyped(KeyEvent arg0) {
+	}
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		int mouseX = e.getX();
+		int mouseY = e.getY(); // gather mouse coordinates
+		check = chell.shoot(mouseX,mouseY,e.getButton(),Oportal,Bportal,blocklistactive);
+	}
+	@Override
+	public void mouseEntered(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void mouseExited(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void mousePressed(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	}
+

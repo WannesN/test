@@ -1,4 +1,4 @@
-package Portal2D;
+package movementguy;
 
 import java.util.ArrayList;
 
@@ -10,32 +10,47 @@ public class Games {
 	
 	public void kader(boolean portalable) {
 		if(portalable) {
-			Block cornerLU = new Block(-190,-190,200,200, Blocktype.Allergic);//left up = corner
-			cornerLU.color = Colors.lightGrey;
+			Block cornerLU = new Block(-190,-190,200,200);//left up = corner
+			cornerLU.special = "allergic";
+			cornerLU.portalable = false;
 			level.add(cornerLU);
-			level.add(new Block(10,-190,970,200));//up = roof
-			Block cornerRU = new Block(980,-190,200,200, Blocktype.Allergic);//right up = corner
-			cornerRU.color = Colors.lightGrey;
+			
+			Block cornerRU = new Block(980,-190,200,200);//right up = corner
+			cornerRU.special = "allergic";
+			cornerRU.portalable = false;
 			level.add(cornerRU);
-			Block cornerLD = new Block(-190,700,200,200, Blocktype.Allergic);//left up = corner
-			cornerLD.color = Colors.lightGrey;
+			
+			Block cornerLD = new Block(-190,700,200,200);//left up = corner
+			cornerLD.special = "allergic";
+			cornerLD.portalable = false;
 			level.add(cornerLD);
-			level.add(new Block(10,700,970,200));//down = floor
-			Block cornerRD = new Block(980,700,200,200, Blocktype.Allergic);//left up = corner
-			cornerRD.color = Colors.lightGrey;
+			
+			Block cornerRD = new Block(980,700,200,200);//left up = corner
+			cornerRD.special = "allergic";
+			cornerRD.portalable = false;
 			level.add(cornerRD);
-			level.add(new Block(-190,10,200,690));//left = wall
-			level.add(new Block(980,10,200,690));//right = wall
+			
+			level.add(new Block(10,-190,600,200));//up = roof
+			level.add(new Block(380,-190,600,200));
+			
+			level.add(new Block(10,700,600,200));//down = floor
+			level.add(new Block(380,700,600,200));
+			
+			level.add(new Block(-190,10,200,400));//left = wall
+			level.add(new Block(-190,300,200,400));
+			
+			level.add(new Block(980,10,200,400));//right = wall
+			level.add(new Block(980,300,200,400));
 		}
 		else {
-			level.add(new Block(-190,-190,200,200, Blocktype.Allergic));//left up = corner
-			level.add(new Block(10,-190,970,200, Blocktype.Allergic));//up = roof
-			level.add(new Block(980,-190,200,200, Blocktype.Allergic));//right up = corner
-			level.add(new Block(-190,700,200,200, Blocktype.Allergic));//left down = corner
-			level.add(new Block(10,700,970,200, Blocktype.Allergic));//down = floor
-			level.add(new Block(980,700,200,200, Blocktype.Allergic));//right down = corner
-			level.add(new Block(-190,10,200,690, Blocktype.Allergic));//left = wall
-			level.add(new Block(980,10,200,690, Blocktype.Allergic));//right = wall
+			level.add(new Block(-190,-190,200,200, "allergic"));//left up = corner
+			level.add(new Block(10,-190,1000,200, "allergic"));//up = roof
+			level.add(new Block(980,-190,200,200, "allergic"));//right up = corner
+			level.add(new Block(-190,700,200,200, "allergic"));//left down = corner
+			level.add(new Block(10,700,1000,200, "allergic"));//down = floor
+			level.add(new Block(980,700,200,200, "allergic"));//right down = corner
+			level.add(new Block(-190,10,200,700, "allergic"));//left = wall
+			level.add(new Block(980,10,200,700, "allergic"));//right = wall
 		}
 			
 	}
@@ -49,51 +64,52 @@ public class Games {
 			level.add(new Block(150, 600, 50, 100));
 			level.add(new Block(450, 550, 50, 150));			
 			level.add(new Block(750, 500, 50, 200));			
-			level.add(new Block(200, 650, 250, 50, Blocktype.Lava));
+			level.add(new Block(200, 650, 250, 50, "lava"));
 			level.add(new Block(500, 650, 250, 50));
-			level.add(new Block(500, 600, 250, 50, Blocktype.Allergic));
-			level.add(new Block(800, 600, 180, 100));
-			level.add(new Block(800, 550, 180, 50, Blocktype.Endzone));
+			level.add(new Block(500, 600, 250, 50, "allergic"));
+			level.add(new Block(800, 600, 200, 100));
+			level.add(new Block(800, 550, 180, 50, "endzone"));
 			kader(true);
 		}
 		else if(index == 1) {
 			spawnpoint = new Point(15,700);
 			kader(true);
-			level.add(new Block(100,700, 700, 50,Blocktype.Lava));
-			level.add(new Block(800,700, 50, 50,Blocktype.Endzone));
-			level.add(new Block(850,700, 200, 50, Blocktype.Lava));
+			level.add(new Block(100,697, 700, 50,"lava"));
+			level.add(new Block(800,697, 50, 50,"endzone"));
+			level.add(new Block(850,697, 200, 50, "lava"));
 		
 		}
 		else if (index == 2) {
 			spawnpoint = new Point(15,700);
 			kader(true);	
 			level.add(new Block(100, 500, 50, 200));
-			level.add(new Block(500, 700, 50, 50, Blocktype.Lava));
-			level.add(new Block(600, 700, 380, 50, Blocktype.Lava));
+			level.add(new Block(500, 697, 50, 50, "lava"));
+			level.add(new Block(600, 697, 380, 50, "lava"));
 			level.add(new Block(470, 200, 50, 400));
 			level.add(new Block(100, 200, 400, 50));
 			level.add(new Block(50, 0, 50, 250));
-			level.add(new Block(200, 200, 75, 20, Blocktype.Endzone));
+			level.add(new Block(200, 200, 75, 20, "endzone"));
 		}
 		else if (index == 3) {
 			spawnpoint = new Point(15,100);
 			level.add(new Block(0,0,100,50));
-			level.add(new Block(300,10,50,90));
+			level.add(new Block(300,10,50,50));
+			level.add(new Block(300,50,50,50));
 			level.add(new Block(0,550,100,100));
-			level.add(new Block(300,100,100,50,Blocktype.Allergic));
-			level.add(new Block(0,150,100,400,Blocktype.Allergic));
-			level.add(new Block(0,650,100,400,Blocktype.Allergic));
-			level.add(new Block(400,250,100,900,Blocktype.Allergic));
-			level.add(new Block(750,250,50,900,Blocktype.Allergic));
-			level.add(new Block(800,250,50,50,Blocktype.Allergic));
-			level.add(new Block(800,400,50,450,Blocktype.Allergic));
-			level.add(new Block(850,450,75,50,Blocktype.Allergic));
-			level.add(new Block(900,360,100,50,Blocktype.Allergic));
-			level.add(new Block(200,0,100,300,Blocktype.Allergic));
+			level.add(new Block(300,100,100,50,"allergic"));
+			level.add(new Block(0,150,100,400,"allergic"));
+			level.add(new Block(0,650,100,400,"allergic"));
+			level.add(new Block(400,250,100,900,"allergic"));
+			level.add(new Block(750,250,50,900,"allergic"));
+			level.add(new Block(800,250,50,50,"allergic"));
+			level.add(new Block(800,400,50,450,"allergic"));
+			level.add(new Block(850,450,75,50,"allergic"));
+			level.add(new Block(900,360,100,50,"allergic"));
+			level.add(new Block(200,0,100,300,"allergic"));
 			level.add(new Block(100,650,300,100));
 			level.add(new Block(800,300,50,100));
-			level.add(new Block(500,647,250,100,Blocktype.Lava));
-			level.add(new Block(850,650,150,100,Blocktype.Endzone));
+			level.add(new Block(500,650,250,100,"lava"));
+			level.add(new Block(850,650,150,100,"endzone"));
 			kader(false);
 		}
 		else if (index == 4) {
@@ -103,64 +119,40 @@ public class Games {
 			level.add(new Block(150,550,700,50));
 			level.add(new Block(100,200,200,50));
 			level.add(new Block(600,200,200,50));
-			level.add(new Block(700, 700, 75, 20, Blocktype.Endzone));
-			level.add(new Block(800, 697, 200, 50, Blocktype.Lava));
+			level.add(new Block(700, 700, 75, 20, "endzone"));
+			level.add(new Block(800, 697, 200, 50, "lava"));
 			
 		}
 		else if (index == 5) {
 			spawnpoint = new Point(15,700);
 			kader(true);		
 			level.add(new Block(250,550,600,50));
-			level.add(new Block(800, 697, 200, 50, Blocktype.Lava));
-			level.add(new Block(250,550,50,102, Blocktype.Allergic));
-			level.add(new Block(400, 697, 200, 50, Blocktype.Lava));
-			level.add(new Block(700, 700, 75, 20, Blocktype.Endzone));
+			level.add(new Block(800, 697, 200, 50, "lava"));
+			level.add(new Block(250,550,50,102, "allergic"));
+			level.add(new Block(400, 697, 200, 50, "lava"));
+			level.add(new Block(700, 700, 75, 20, "endzone"));
 		}
 		else if (index == 6) { //intro to button
 			spawnpoint = new Point(15,700);
 			kader(true);
-			level.add(new Block(200, 700, 50, 10, Blocktype.Button));
-			level.add(new Block(600, 10, 50, 690, Blocktype.ButtonListener));
-			level.add(new Block(850, 700, 100, 50, Blocktype.Endzone));
+			level.add(new Block(200, 700, 50, 10, "button"));
+			level.add(new Block(600, 10, 50, 690, "buttonListener"));
+			level.add(new Block(850, 700, 100, 50, "endzone"));
 		}
 		else if (index == 7) {
 			spawnpoint = new Point(20, 100);
 			
 			level.add(new Block(0, 200, 200, 50));
-			level.add(new Block(10, 550, 970, 200));
-			level.add(new Block(100, 200, 50, 10, Blocktype.Button));
-			level.add(new Block(200, 200, 780, 50, Blocktype.ButtonListener));
-			level.add(new Block(10, 500, 970, 50, Blocktype.Endzone));
+			level.add(new Block(10, 550, 600, 200));
+			level.add(new Block(520, 550, 600, 200));
+			level.add(new Block(100, 200, 50, 10, "button"));
+			level.add(new Block(200, 200, 780, 50, "buttonListener"));
+			level.add(new Block(10, 500, 970, 50, "endzone"));
 			kader(true);
-		}
-		else if (index == 8) {
-			spawnpoint = new Point(20, 50);
-			
-			level.add(new Block(-25,650,250,50,Blocktype.Lava));
-			level.add(new Block(225,640,100,100));
-			level.add(new Block(325,650,525,50,Blocktype.Lava));
-			
-			level.add(new Block(0,150,200,50,Blocktype.Allergic));
-			level.add(new Block(0,0,250,50));
-			level.add(new Block(200,125,50,100,Blocktype.Allergic));
-			level.add(new Block(100,150,100,10,Blocktype.Button));
-			
-			level.add(new Block(500,0,50,150,Blocktype.Allergic));
-			level.add(new Block(500,150,100,50,Blocktype.Allergic));
-			level.add(new Block(550,150,50,10,Blocktype.Endzone));
-			
-			level.add(new Block(0,300,50,100));
-			level.add(new Block(800,500,50,200,Blocktype.Allergic));
-			level.add(new Block(850,650,150,50));
-			
-			
-			level.add(new Block(325,0,50,700,Blocktype.ButtonListener));
-			level.add(new Block(450,500,350,50,Blocktype.ButtonListener));
-			level.add(new Block(600,150,400,50,Blocktype.ButtonListener));
-			
-			
-			
-			kader(false);
+		} 
+		else {
+			spawnpoint = new Point(15, 700);
+			kader(true);
 		}
 	}
 }

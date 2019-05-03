@@ -1,4 +1,4 @@
-package Portal2D;
+package movementguy;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -12,19 +12,21 @@ public class Block {
 	int x,y,width,height;
 	int time = 0;
 	boolean portalable = true;
-
-	Blocktype special = Blocktype.Normal; // is a string instead of null to avoid nullPointerExceptions
+	LineSegment left,right,up,down;
+	String special = "null"; // is a string instead of null to avoid nullPointerExceptions
 	Color color = Colors.lightGrey;
 	public boolean isOnButton = false;
 	BufferedImage lavagif;
 	BufferedImage Als1e,Als2e,Als3e,Als4e,Als5e,Als6e,Als7e,Als8e,Als9e,Als10e,Als11e,Als12e,Als13e,Als14e,Als15e,Als16e,Als17e,Als18e,Als19e,Als20e,Als21e,Als22e,Als23e,Als24e,Als25e;
+	BufferedImage walltexture;
+	//BufferedImage buttonPressed, buttonUnpressed; goeie sprites nodig
 	
 	public void Lava(int x,int y) {
 		this.x = x;
 		this.y = y;
 		
 		try {
-			//lavagif =ImageIO.read(new File("Resorces/Images/Lava met bellen.gif"));
+			//lavagif =ImageIO.read(new File("Resources/Images/Lava met bellen.gif"));
 			Als1e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 1e.png"));
 			Als2e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 2e.png"));
 			Als3e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 3e.png"));
@@ -57,7 +59,43 @@ public class Block {
 		}
 		
 	}
+	
+	public void Texture1(int x,int y) {
+		this.x = x;
+		this.y = y;
 		
+		try {
+			walltexture = ImageIO.read(new File("Resources/Images/texture1.png"));
+			} catch(IOException ex) {
+			System.out.println("image load failed");
+		}
+		
+	}
+	public void Texture2(int x,int y) {
+		this.x = x;
+		this.y = y;
+		
+		try {
+			walltexture = ImageIO.read(new File("Resources/Images/texture2.png"));
+			} catch(IOException ex) {
+			System.out.println("image load failed");
+		}
+		
+	}
+	
+//	public void Button(int x,int y) {
+//		this.x = x;
+//		this.y = y;
+//		
+//		try {
+//			buttonPressed = ImageIO.read(new File("Resources/Images/buttonPressed.png"));
+//			buttonUnpressed = ImageIO.read(new File("Resources/Images/buttonUnpressed.png"));
+//			} catch(IOException ex) {
+//			System.out.println("image load failed");
+//		}
+//		
+//	}
+	
 
 	
 	Block(int x, int y,int width,int height) {
@@ -66,52 +104,75 @@ public class Block {
 		this.width = width;
 		this.height = height;
 		
+		this.left = new LineSegment(x,y,x,y+height);
+		this.right = new LineSegment(x+width,y,x+width,y+height);
+		
+		Texture1(x,y);
+		for (int i=0; i<width/50;i++) {
+			for (int j=0; j<height/50;j++) {
+			Games.level.add(new Block(x+i*50,y+j*50,0,50));
+			}
+		}
+		
+		
 	}
-	Block(int x, int y,int width,int height,Blocktype special) {
+	Block(int x, int y,int width,int height,String special) {
 		this.x = x;
 		this.y = y;
 		this.width = width;
 		this.height = height;
 		
+		this.left = new LineSegment(x,y,x,y+height);
+		this.right = new LineSegment(x+width,y,x+width,y+height);
+		
 		this.special = special;
-		if (special == Blocktype.Endzone) {//finish, end of level
+		if (special.equals("endzone")) {//finish, end of level
 			this.color = Colors.nuclearGreen;
-		} else if (special == Blocktype.Lava) {//lava, kills Chell
+		} else if (special.equals("lava")) {//lava, kills Chell
 			Lava(x,y);
 			for (int i=0; i<width/50;i++) {
-				Games.level.add(new Block(x+i*50,y,0,50,Blocktype.Lava));
+				Games.level.add(new Block(x+i*50,y,0,50,"lava"));
+			}	
+		} else if (special.equals("allergic")) {//floors that don't take portals
+			Texture2(x,y);
+			for (int i=0; i<width/50;i++) {
+				for (int j=0; j<height/50;j++) {
+					Games.level.add(new Block(x+i*50,y+j*50,0,50,"allergic"));
 			}
-		
-			
-		} else if (special== Blocktype.Allergic) {//floors that don't take portals
-			this.color = Colors.darkGrey;
+			}
 			portalable = false;
-		} else if (special == Blocktype.Button) {//it's a button
+		} else if (special.equals("button")) {//it's a button
 			this.color = Colors.buttonYellow;
+			//Button(x,y);
 			portalable = false;
-		} else if (special == Blocktype.ButtonListener) {//changes if isOnButton is active
+		} else if (special.equals("buttonListener")) {//changes if isOnButton is active
 			this.color = Colors.reactionPink;
 			portalable = false;
 		}
 	}
 	
-	public Direction intersect(Point point,int targetheight) {
+	public String intersect(Point point,int targetheight) {
 		if (point.y+targetheight <= y) {
-			return Direction.Up;
+			return "up";
 		} else if (point.y >= y+height) {
-			return Direction.Down;
-		} else if (point.x < x+width/2) {
-			return Direction.Left;
+			return "down";
 		}
-		return Direction.Right;
+
+		if (point.x < x+width/2) {
+			return "left";
+		}
+
+		return "right";
+		
+		
 	}
 	
 	public void draw(Graphics g,int tick) {
-		if (special ==Blocktype.ButtonListener && Mainpanel.someoneOnButton) {
+		if (special.equals("buttonListener") && Mainpanel.someoneOnButton) {
 		}
 		
 		
-		else if (special == Blocktype.Lava) {
+		else if (special.equals("lava")) {
 			if(tick-time<2) {
 				lavagif = Als1e;
 				}else if(tick-time<4) {
@@ -165,8 +226,258 @@ public class Block {
 					time = tick;
 					}
 			g.drawImage(lavagif,x,y,null);
+		} else if (color.equals(Colors.lightGrey)) {
+			g.drawImage(walltexture, x, y, null);
+//		} else if (special.equals("button")) {
+//			if (isOnButton) {
+//				g.drawImage(buttonPressed, x, y-10, null);
+//			} else if (!isOnButton){
+//				g.drawImage(buttonUnpressed, x, y-30, null);
+//			}
+		} else {
+		g.setColor(color);
+		g.fillRect(x, y, width, height);
 		}
-		else {
+	}
+	
+}
+package movementguy;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
+public class Block {
+	int x,y,width,height;
+	int time = 0;
+	boolean portalable = true;
+	LineSegment left,right,up,down;
+	String special = "null"; // is a string instead of null to avoid nullPointerExceptions
+	Color color = Colors.lightGrey;
+	public boolean isOnButton = false;
+	BufferedImage lavagif;
+	BufferedImage Als1e,Als2e,Als3e,Als4e,Als5e,Als6e,Als7e,Als8e,Als9e,Als10e,Als11e,Als12e,Als13e,Als14e,Als15e,Als16e,Als17e,Als18e,Als19e,Als20e,Als21e,Als22e,Als23e,Als24e,Als25e;
+	BufferedImage walltexture;
+	//BufferedImage buttonPressed, buttonUnpressed; goeie sprites nodig
+	
+	public void Lava(int x,int y) {
+		this.x = x;
+		this.y = y;
+		
+		try {
+			//lavagif =ImageIO.read(new File("Resources/Images/Lava met bellen.gif"));
+			Als1e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 1e.png"));
+			Als2e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 2e.png"));
+			Als3e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 3e.png"));
+			Als4e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 4e.png"));
+			Als5e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 5e.png"));
+			Als6e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 6e.png"));
+			Als7e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 7e.png"));
+			Als8e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 8e.png"));
+			Als9e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 9e.png"));
+			Als10e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 10e.png"));
+			Als11e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 11e.png"));
+			Als12e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 12e.png"));
+			Als13e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 13e.png"));
+			Als14e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 14e.png"));
+			Als15e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 15e.png"));
+			Als16e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 16e.png"));
+			Als17e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 17e.png"));
+			Als18e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 18e.png"));
+			Als19e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 19e.png"));
+			Als20e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 20e.png"));
+			Als21e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 21e.png"));
+			Als22e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 22e.png"));
+			Als23e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 23e.png"));
+			Als24e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 24e.png"));
+			Als25e = ImageIO.read(new File("Resources/Images/lava met bellengif Als 25e.png"));
+			lavagif = Als25e;
+			lavagif = Als1e;
+			} catch(IOException ex) {
+			System.out.println("gif load failed");
+		}
+		
+	}
+	
+	public void Texture1(int x,int y) {
+		this.x = x;
+		this.y = y;
+		
+		try {
+			walltexture = ImageIO.read(new File("Resources/Images/texture1.png"));
+			} catch(IOException ex) {
+			System.out.println("image load failed");
+		}
+		
+	}
+	public void Texture2(int x,int y) {
+		this.x = x;
+		this.y = y;
+		
+		try {
+			walltexture = ImageIO.read(new File("Resources/Images/texture2.png"));
+			} catch(IOException ex) {
+			System.out.println("image load failed");
+		}
+		
+	}
+	
+//	public void Button(int x,int y) {
+//		this.x = x;
+//		this.y = y;
+//		
+//		try {
+//			buttonPressed = ImageIO.read(new File("Resources/Images/buttonPressed.png"));
+//			buttonUnpressed = ImageIO.read(new File("Resources/Images/buttonUnpressed.png"));
+//			} catch(IOException ex) {
+//			System.out.println("image load failed");
+//		}
+//		
+//	}
+	
+
+	
+	Block(int x, int y,int width,int height) {
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		
+		this.left = new LineSegment(x,y,x,y+height);
+		this.right = new LineSegment(x+width,y,x+width,y+height);
+		
+		Texture1(x,y);
+		for (int i=0; i<width/50;i++) {
+			for (int j=0; j<height/50;j++) {
+			Games.level.add(new Block(x+i*50,y+j*50,0,50));
+			}
+		}
+		
+		
+	}
+	Block(int x, int y,int width,int height,String special) {
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		
+		this.left = new LineSegment(x,y,x,y+height);
+		this.right = new LineSegment(x+width,y,x+width,y+height);
+		
+		this.special = special;
+		if (special.equals("endzone")) {//finish, end of level
+			this.color = Colors.nuclearGreen;
+		} else if (special.equals("lava")) {//lava, kills Chell
+			Lava(x,y);
+			for (int i=0; i<width/50;i++) {
+				Games.level.add(new Block(x+i*50,y,0,50,"lava"));
+			}	
+		} else if (special.equals("allergic")) {//floors that don't take portals
+			Texture2(x,y);
+			for (int i=0; i<width/50;i++) {
+				for (int j=0; j<height/50;j++) {
+					Games.level.add(new Block(x+i*50,y+j*50,0,50,"allergic"));
+			}
+			}
+			portalable = false;
+		} else if (special.equals("button")) {//it's a button
+			this.color = Colors.buttonYellow;
+			//Button(x,y);
+			portalable = false;
+		} else if (special.equals("buttonListener")) {//changes if isOnButton is active
+			this.color = Colors.reactionPink;
+			portalable = false;
+		}
+	}
+	
+	public String intersect(Point point,int targetheight) {
+		if (point.y+targetheight <= y) {
+			return "up";
+		} else if (point.y >= y+height) {
+			return "down";
+		}
+
+		if (point.x < x+width/2) {
+			return "left";
+		}
+
+		return "right";
+		
+		
+	}
+	
+	public void draw(Graphics g,int tick) {
+		if (special.equals("buttonListener") && Mainpanel.someoneOnButton) {
+		}
+		
+		
+		else if (special.equals("lava")) {
+			if(tick-time<2) {
+				lavagif = Als1e;
+				}else if(tick-time<4) {
+					lavagif = Als2e;
+				}else if(tick-time<6) {
+					lavagif = Als3e;
+				}else if(tick-time<8) {
+					lavagif = Als4e;
+				}else if(tick-time<10) {
+					lavagif = Als5e;
+				}else if(tick-time<12) {
+					lavagif = Als6e;
+				}else if(tick-time<14) {
+					lavagif = Als7e;
+				}else if(tick-time<16) {
+					lavagif = Als8e;
+				}else if(tick-time<18) {
+					lavagif = Als9e;
+				}else if(tick-time<20) {
+					lavagif = Als10e;
+				}else if(tick-time<22) {
+					lavagif = Als11e;
+				}else if(tick-time<24) {
+					lavagif = Als12e;
+				}else if(tick-time<26) {
+					lavagif = Als13e;
+				}else if(tick-time<28) {
+					lavagif = Als14e;
+				}else if(tick-time<30) {
+					lavagif = Als15e;
+				}else if(tick-time<32) {
+					lavagif = Als16e;
+				}else if(tick-time<34) {
+					lavagif = Als17e;
+				}else if(tick-time<36) {
+					lavagif = Als18e;
+				}else if(tick-time<38) {
+					lavagif = Als19e;
+				}else if(tick-time<40) {
+					lavagif = Als20e;
+				}else if(tick-time<42) {
+					lavagif = Als21e;
+				}else if(tick-time<44) {
+					lavagif = Als22e;
+				}else if(tick-time<46) {
+					lavagif = Als23e;
+				}else if(tick-time<48) {
+					lavagif = Als24e;
+				}else {
+					lavagif = Als25e;
+					time = tick;
+					}
+			g.drawImage(lavagif,x,y,null);
+		} else if (color.equals(Colors.lightGrey)) {
+			g.drawImage(walltexture, x, y, null);
+//		} else if (special.equals("button")) {
+//			if (isOnButton) {
+//				g.drawImage(buttonPressed, x, y-10, null);
+//			} else if (!isOnButton){
+//				g.drawImage(buttonUnpressed, x, y-30, null);
+//			}
+		} else {
 		g.setColor(color);
 		g.fillRect(x, y, width, height);
 		}

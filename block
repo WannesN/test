@@ -13,15 +13,15 @@ public class Block {
 	int time = 0;
 	int gifcounter = 0;
 	boolean portalable = true;
-
 	Blocktype special = Blocktype.Normal; // is an enum instead of null to avoid nullPointerExceptions
+	Buttontype type = Buttontype.Normal;
 	Color color = Colors.lightGrey;
 	public boolean isOnButton = false;
 	boolean upright;
 	BufferedImage[] lavagif = new BufferedImage[25];
-	BufferedImage Als1e,Als2e,Als3e,Als4e,Als5e,Als6e,Als7e,Als8e,Als9e,Als10e,Als11e,Als12e,Als13e,Als14e,Als15e,Als16e,Als17e,Als18e,Als19e,Als20e,Als21e,Als22e,Als23e,Als24e,Als25e;
 	BufferedImage walltexture;
-	//BufferedImage buttonPressed, buttonUnpressed; goeie sprites nodig
+	BufferedImage[] buttontetexture = new BufferedImage[2];
+	BufferedImage finish;
 	
 	public void Lava(int x,int y) {
 		this.x = x;
@@ -43,9 +43,9 @@ public class Block {
 		this.y = y;
 
 		try {
-			walltexture = ImageIO.read(new File("Resources/Images/texture 1.png"));
+			walltexture = ImageIO.read(new File("Resources/Images/Light wall.png"));
 			} catch(IOException ex) {
-			System.out.println("image load failed: texture1");
+			System.out.println("image load failed: Light wall");
 		}
 
 	}
@@ -54,9 +54,9 @@ public class Block {
 		this.y = y;
 
 		try {
-			walltexture = ImageIO.read(new File("Resources/Images/texture 2.png"));
+			walltexture = ImageIO.read(new File("Resources/Images/texture2.png"));
 			} catch(IOException ex) {
-			System.out.println("image load failed: texture2");
+			System.out.println("image load texture2.png load failed: texture2");
 		}
 
 	}
@@ -77,18 +77,22 @@ public class Block {
 	}
 	
 
-//	public void Button(int x,int y) {
-//		this.x = x;
-//		this.y = y;
-//		
-//		try {
-//			buttonPressed = ImageIO.read(new File("Resources/Images/buttonPressed.png"));
-//			buttonUnpressed = ImageIO.read(new File("Resources/Images/buttonUnpressed.png"));
-//			} catch(IOException ex) {
-//			System.out.println("image load failed");
-//		}
-//		
-//	}
+	Block(int x,int y,Buttontype type) {
+		this.x = x;
+		this.y = y;
+		this.type = type;
+		int place;
+		try {
+			if(type.equals(Buttontype.Left)) {place = 0;}
+			else if (type.equals(Buttontype.Middle)) {place = 1;}
+			else {place = 2;}
+			buttontetexture[0] = ImageIO.read(new File("Resources/Images/buttonUnpressed"+Integer.toString(place)+".png"));
+			buttontetexture[1] = ImageIO.read(new File("Resources/Images/buttonPressed"+Integer.toString(place)+".png"));
+			} catch(IOException ex) {
+			System.out.println("image load failed: Button");
+		}
+		
+	}
 
 
 	
@@ -115,12 +119,15 @@ public class Block {
 		this.special = special;
 		if (special == Blocktype.Endzone) {//finish, end of level
 			this.color = Colors.nuclearGreen;
+			portalable = false;
+			try {finish = ImageIO.read(new File("Resources/Images/Finish.png"));
+				} catch(IOException ex) {System.out.println("image load failed: Finish");}
 		} else if (special == Blocktype.Lava) {//lava, kills Chell
 			Lava(x,y);
 			for (int i=0; i<width/50;i++) {
 				Games.level.add(new Block(x+i*50,y,0,50,Blocktype.Lava));
+				portalable = false;
 			}
-			portalable = false;
 		
 			
 		} else if (special== Blocktype.Allergic) {//floors that don't take portals
@@ -132,8 +139,15 @@ public class Block {
 			}
 			portalable = false;
 		} else if (special == Blocktype.Button) {//it's a button
-			this.color = Colors.buttonYellow;
 			portalable = false;
+			Games.level.add(new Block(x,y,Buttontype.Left));
+			for(int i=0;i<(width-20)/30;i++) {
+				Games.level.add(new Block(x+10+i*30,y,Buttontype.Middle));
+			}
+			if(!((width-20)%30 == 0)) {
+				Games.level.add(new Block(x+width-40,y,Buttontype.Middle));
+			}
+			Games.level.add(new Block(x+width-10,y,Buttontype.Right));
 		} else if (special == Blocktype.ButtonListener) {//changes if isOnButton is active
 			if (height>width) {
 				this.upright = true;
@@ -175,10 +189,16 @@ public class Block {
 	}
 	
 	public void draw(Graphics g,int tick) {
-		if (special.equals(Blocktype.ButtonListener) && Mainpanel.someoneOnButton) {
+		if (special.equals(Blocktype.ButtonListener) && Mainpanel.someoneOnButton) {}
+		else if(special.equals(Blocktype.Button)) {}
+		else if(type.equals(Buttontype.Left)||type.equals(Buttontype.Middle)||type.equals(Buttontype.Right)) {
+			int pressed = 0;
+			if(Mainpanel.someoneOnButton) {
+				pressed = 1;
+			}
+			g.drawImage(buttontetexture[pressed],x,y-5+5*pressed,null);
+			
 		}
-		
-		
 		else if (special.equals(Blocktype.Lava)) {		
 			if((tick-time) % 2 == 0) {
 				gifcounter++;
@@ -190,12 +210,10 @@ public class Block {
 			g.drawImage(lavagif[gifcounter],x,y,null);
 		} else if (color.equals(Colors.lightGrey)) {
 			g.drawImage(walltexture, x, y, null);
-//		} else if (special.equals("button")) {
-//			if (isOnButton) {
-//				g.drawImage(buttonPressed, x, y-10, null);
-//			} else if (!isOnButton){
-//				g.drawImage(buttonUnpressed, x, y-30, null);
-//			}
+		} else if(special.equals(Blocktype.Endzone)) {
+			g.drawImage(finish,x+width*2/7,y-49,null);
+			g.setColor(color);
+			g.fillRect(x, y, width, height);
 		} else {
 		g.setColor(color);
 		g.fillRect(x, y, width, height);

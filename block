@@ -1,274 +1,205 @@
-package movementguy;
+package Portal2D;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
+import javax.imageio.ImageIO;
 
+public class Block {
+	int x,y,width,height;
+	int time = 0;
+	int gifcounter = 0;
+	boolean portalable = true;
 
-
-
-
-public class Mainpanel extends JPanel implements ActionListener, KeyListener, MouseListener {
-	Mainframe f;
-	public Player chell;
-	public Lemming atlas;
-	public Portal Bportal;
-	public Portal Oportal;
-	public int tick = 0;
-	int floory;
-	static boolean levelChanged = true;
-	static boolean paused = false;
-	static boolean someoneOnButton = false;
-
-	Scanner enter = new Scanner(System.in);
-	ArrayList<Block> blocklistactive = new ArrayList<Block>();
-	ArrayList<Point> check = new ArrayList<Point>();
-	static int level; 
-	Games game = new Games(level);
-	int cheatcode = 0;
+	Blocktype special = Blocktype.Normal; // is an enum instead of null to avoid nullPointerExceptions
+	Color color = Colors.lightGrey;
+	public boolean isOnButton = false;
+	boolean upright;
+	BufferedImage[] lavagif = new BufferedImage[25];
+	BufferedImage Als1e,Als2e,Als3e,Als4e,Als5e,Als6e,Als7e,Als8e,Als9e,Als10e,Als11e,Als12e,Als13e,Als14e,Als15e,Als16e,Als17e,Als18e,Als19e,Als20e,Als21e,Als22e,Als23e,Als24e,Als25e;
+	BufferedImage walltexture;
+	//BufferedImage buttonPressed, buttonUnpressed; goeie sprites nodig
 	
-	public Mainpanel(Mainframe f) {
-		this.f = f;
-		floory = this.getHeight();
-		chell = new Player((int) game.spawnpoint.x,(int) game.spawnpoint.y); //create player and portal objects
-		atlas = new Lemming((int) game.spawnpoint.x,(int) game.spawnpoint.y);
-		Bportal = new Portal("Blue");
-		Oportal = new Portal("Orange");
-		
-		this.setFocusable(true); //Focus on this panel so Keylistener and Mouselistener can work
-		this.requestFocus();
-		
-		this.addKeyListener(this);
-		this.addMouseListener(this);
-		
-		Timer timer = new Timer();
-		timer.scheduleAtFixedRate(new UpdateTimerTask(),0,20); // set up timer, with 20 ms period
-		
-	}
-	public void actionPerformed(ActionEvent e) { //possibly useless?
-        repaint();
-        }
-	
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        for (int i = 0; i <blocklistactive.size();i++ ) {
-        	blocklistactive.get(i).draw(g,tick);
-        }
-        for (int i = 0; i <check.size();i++ ) { // draw trail to portalshot 
-        	g.setColor(new Color(0,0,0));
-        	g.drawOval((int)check.get(i).x-5, (int)check.get(i).y-5, 10, 10);
-        }
-        chell.draw(g); // all object draw methods are in their respective classes
-        atlas.draw(g);
-        Bportal.draw(g);
-        Oportal.draw(g);
-    }
+	public void Lava(int x,int y) {
+		this.x = x;
+		this.y = y;
 
-	public static void main(String[] args) {
-		Mainframe f = new Mainframe(); // basic frame setup
-		f.setSize(1000,750);
-		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	    f.setTitle("movement");
-	    f.setLocation(100,100);
-	    JPanel menupanel = new Menupanel(f);
-	    JPanel hoofpaneel = new Mainpanel(f);
-	    f.game = hoofpaneel;
-	    f.menu = menupanel;
-	    f.add(menupanel);
-	    f.setResizable(false);
-	    f.setVisible(true);
-	    
-	}
-	
-	
-	class UpdateTimerTask extends TimerTask {
-		public void run() {
-			checkLevel();
-			 repaint(); // what will be done every 20ms
-			 tick++;
-			 chell.move(Bportal, Oportal,tick,blocklistactive);
-			 atlas.move(Bportal, Oportal,tick,blocklistactive);
-			 int ButtonCheck = 0;
-			 for (int i = 0; i <blocklistactive.size();i++ ) {
-				 if (blocklistactive.get(i).isOnButton) {
-					 ButtonCheck++;
-				 }
-			 }
-			 if (!(ButtonCheck == 0)) {
-				 someoneOnButton = true;
-			 } else {
-				 someoneOnButton = false;
-			 }
-			 for (int i = 0; i <blocklistactive.size();i++ ) {
-				 blocklistactive.get(i).isOnButton = false;
-			 }
-			 }
-		}
-	
-	public void checkLevel() {
-		
-		if (levelChanged) {
-
-			blocklistactive.clear();
-			game = new Games(Mainpanel.level);
-			chell.spawnpoint = game.spawnpoint;
-			atlas.spawnpoint = game.spawnpoint;
-			blocklistactive = Games.level;
-			chell.reset();
-			atlas.reset();
-			levelChanged = false;
+		try {
+			for (int i=0;i<25;i++) {
+				lavagif[i] = ImageIO.read(new File("Resources/Images/lava met bellengif Als "+Integer.toString(i+1)+"e.png"));
+			
+			}
+			} catch(IOException ex) {
+			System.out.println("gif load failed: lava");
 		}
 		
 	}
+	
+	public void Texture1(int x,int y) {
+		this.x = x;
+		this.y = y;
+
+		try {
+			walltexture = ImageIO.read(new File("Resources/Images/texture 1.png"));
+			} catch(IOException ex) {
+			System.out.println("image load failed: texture1");
+		}
+
+	}
+	public void Texture2(int x,int y) {
+		this.x = x;
+		this.y = y;
+
+		try {
+			walltexture = ImageIO.read(new File("Resources/Images/texture 2.png"));
+			} catch(IOException ex) {
+			System.out.println("image load failed: texture2");
+		}
+
+	}
+	
+	public void Gatetexture(int x,int y) {
+		this.x = x;
+		this.y = y;
+
+		try {
+			if (upright) {
+				walltexture = ImageIO.read(new File("Resources\\Images\\GatewayVertical(50x50).png"));
+			} else {
+				walltexture = ImageIO.read(new File("Resources\\\\Images\\\\GatewayHorizontal(50x50).png"));
+			}
+			} catch(IOException ex) {
+			System.out.println("image load failed: GatewayVertical");
+		}
+	}
+	
+
+//	public void Button(int x,int y) {
+//		this.x = x;
+//		this.y = y;
+//		
+//		try {
+//			buttonPressed = ImageIO.read(new File("Resources/Images/buttonPressed.png"));
+//			buttonUnpressed = ImageIO.read(new File("Resources/Images/buttonUnpressed.png"));
+//			} catch(IOException ex) {
+//			System.out.println("image load failed");
+//		}
+//		
+//	}
+
 
 	
+	Block(int x, int y,int width,int height) {
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		
+		Texture1(x,y);
+		for (int i=0; i<width/50;i++) {
+			for (int j=0; j<height/50;j++) {
+			Games.level.add(new Block(x+i*50,y+j*50,0,50));
+			}
+		}
+		
+	}
+	Block(int x, int y,int width,int height,Blocktype special) {
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		
+		this.special = special;
+		if (special == Blocktype.Endzone) {//finish, end of level
+			this.color = Colors.nuclearGreen;
+		} else if (special == Blocktype.Lava) {//lava, kills Chell
+			Lava(x,y);
+			for (int i=0; i<width/50;i++) {
+				Games.level.add(new Block(x+i*50,y,0,50,Blocktype.Lava));
+			}
+			portalable = false;
+		
+			
+		} else if (special== Blocktype.Allergic) {//floors that don't take portals
+			Texture2(x,y);
+			for (int i=0; i<width/50;i++) {
+				for (int j=0; j<height/50;j++) {
+					Games.level.add(new Block(x+i*50,y+j*50,0,50,Blocktype.Allergic));
+				}
+			}
+			portalable = false;
+		} else if (special == Blocktype.Button) {//it's a button
+			this.color = Colors.buttonYellow;
+			portalable = false;
+		} else if (special == Blocktype.ButtonListener) {//changes if isOnButton is active
+			if (height>width) {
+				this.upright = true;
+			} else {
+				this.upright = false;
+			}
+			Games.level.add(new Block(x,y,width,height,upright));
+	}
+	}
+		
 	
-	public void changePortals() {
-		if (Oportal.color.equals("Orange")) {
-			Oportal.color = "Red";
+
+	Block(int x, int y,int width,int height,boolean upright) {
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		this.upright = upright;
+		this.special = Blocktype.ButtonListener;
+		Gatetexture(x,y);
+		for (int i=0; i<height/50;i++) {
+			for (int j=0;j<width/50;j++) {
+				Games.level.add(new Block(x+j*50,y+i*50,0,0,upright));
+				}
+			}
+		portalable = false;
+		}
+	
+	public Direction intersect(Point point,int targetheight) {
+		if (point.y+targetheight <= y) {
+			return Direction.Up;
+		} else if (point.y >= y+height) {
+			return Direction.Down;
+		} else if (point.x < x+width/2) {
+			return Direction.Left;
 		} else {
-			Oportal.color = "Orange";
+			return Direction.Right;
 		}
-		if (Bportal.color.equals("Blue")) {
-			Bportal.color = "Green";
+	}
+	
+	public void draw(Graphics g,int tick) {
+		if (special.equals(Blocktype.ButtonListener) && Mainpanel.someoneOnButton) {
+		}
+		
+		
+		else if (special.equals(Blocktype.Lava)) {		
+			if((tick-time) % 2 == 0) {
+				gifcounter++;
+			}
+			if (gifcounter >= 25) {
+				gifcounter = 0;
+				time = tick;
+			}
+			g.drawImage(lavagif[gifcounter],x,y,null);
+		} else if (color.equals(Colors.lightGrey)) {
+			g.drawImage(walltexture, x, y, null);
+//		} else if (special.equals("button")) {
+//			if (isOnButton) {
+//				g.drawImage(buttonPressed, x, y-10, null);
+//			} else if (!isOnButton){
+//				g.drawImage(buttonUnpressed, x, y-30, null);
+//			}
 		} else {
-			Bportal.color = "Blue";
+		g.setColor(color);
+		g.fillRect(x, y, width, height);
 		}
-		Oportal.checkColors();
-		Bportal.checkColors();
 	}
 	
-	@Override
-	public void keyPressed(KeyEvent e) { //keypress
-		int button = e.getKeyCode();
-		
-		//for use arrows
-		if (button == KeyEvent.VK_RIGHT ) {
-			chell.moveset("right"); }
-		if (button == KeyEvent.VK_LEFT ) {
-			chell.moveset("left"); }
-		if (button == KeyEvent.VK_DOWN ) {
-			chell.moveset("down"); }
-		if (button == KeyEvent.VK_UP ) {
-			chell.moveset("up"); }
-		
-		//for use Z,Q,S,D (azerty)
-		if (button == KeyEvent.VK_D ) { //to the right
-			chell.moveset("right"); }
-		if (button == KeyEvent.VK_Q ) { //to the left
-			chell.moveset("left"); }
-		if (button == KeyEvent.VK_S ) { //down
-			chell.moveset("down"); }
-		if (button == KeyEvent.VK_Z ) { //up
-			chell.moveset("up"); }
-		
-		//for use W,A,S,D (querty)
-		if (button == KeyEvent.VK_A ) { //to the left
-			chell.moveset("left"); }
-		if (button == KeyEvent.VK_W ) { //up
-			chell.moveset("up"); }
-		//S,D same as azerty
-		
-//		//waiting when dead or won
-		if (button == KeyEvent.VK_ENTER) {
-			paused = false;
-			chell.revive();
-			atlas.revive();
-			checkLevel();
-			chell.reset();
-			atlas.reset();
-			Oportal.x = -50;
-			Oportal.y = -50;
-			Bportal.x = -50;
-			Bportal.y = -50;
-		}
-		
-		if (button == KeyEvent.VK_E) {
-			atlas.stop(); }
-		
-		if (button == KeyEvent.VK_ESCAPE) {
-			f.changepanel(2);
-			chell.reset();
-			atlas.reset();
-		}
-	
-	//for cheatcode
-			if (button == KeyEvent.VK_MINUS) { //-
-				cheatcode = cheatcode +1;
-			}
-			if (button == KeyEvent.VK_CIRCUMFLEX) { //^
-				cheatcode = cheatcode +1;
-			}
-			if (button == KeyEvent.VK_DOLLAR) { //$
-				cheatcode = cheatcode +1;
-			}
-			if (cheatcode ==3) {
-				cheatcode = 0;
-//				System.out.println("Cheatcode is started"); //for control
-				Cheatcode.cheatcode();
-			}
-
-		}	
-
-	
-	@Override
-	public void keyReleased(KeyEvent e) { //keyrelease
-		int button = e.getKeyCode();
-		
-		if (button == KeyEvent.VK_RIGHT ) {
-			chell.stop("right"); }//the cake is a lie
-		if (button == KeyEvent.VK_LEFT ) {
-			chell.stop("left"); }
-		
-		if (button == KeyEvent.VK_D ) {
-			chell.stop("right"); }
-		if (button == KeyEvent.VK_Q ) {
-			chell.stop("left"); }
-		if (button == KeyEvent.VK_A ) {
-			chell.stop("left"); }
-
-	}
-	@Override
-	public void keyTyped(KeyEvent arg0) {
-	}
-	@Override
-	public void mouseClicked(MouseEvent e) {
-		int mouseX = e.getX();
-		int mouseY = e.getY(); // gather mouse coordinates
-		check = chell.shoot(mouseX,mouseY,e.getButton(),Oportal,Bportal,blocklistactive);
-	}
-	@Override
-	public void mouseEntered(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-	@Override
-	public void mouseExited(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-	@Override
-	public void mousePressed(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-	@Override
-	public void mouseReleased(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	}
-
+}

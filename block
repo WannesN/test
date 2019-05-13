@@ -3,6 +3,7 @@ package Portal2D;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -46,7 +47,7 @@ public class Person extends Character{
 	}
 
 	public void personmove(Portal Bportal,Portal Oportal, int tick,ArrayList<Block> blocklistactive ) {
-		if (!won && alive) {
+		if (!won && alive && !Mainpanel.paused) {
 			Direction direction = move(Bportal,Oportal,tick,blocklistactive);
 			if (direction == Direction.Left && ((moveR || moveL))) {
 				speedx = 0;
@@ -97,6 +98,7 @@ public class Person extends Character{
 		ArrayList<Point> answ = new ArrayList<Point>();
 		Portal activeportal = null;
 		Portal otherportal = null;
+		SoundManager.getSoundManager().play("portal_gun_2.wav");
 		if (mousebutton == 1) {
 			activeportal = Bportal;
 			otherportal = Oportal; }
@@ -193,3 +195,4 @@ public class Person extends Character{
 
 
 	
+

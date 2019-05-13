@@ -1,223 +1,195 @@
 package Portal2D;
 
-import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 
-public class Block {
-	int x,y,width,height;
-	int time = 0;
-	int gifcounter = 0;
-	boolean portalable = true;
-	Blocktype special = Blocktype.Normal; // is an enum instead of null to avoid nullPointerExceptions
-	Buttontype type = Buttontype.Normal;
-	Color color = Colors.lightGrey;
-	public boolean isOnButton = false;
-	boolean upright;
-	BufferedImage[] lavagif = new BufferedImage[25];
-	BufferedImage walltexture;
-	BufferedImage[] buttontetexture = new BufferedImage[2];
-	BufferedImage finish;
+public class Person extends Character{
+	final int height = 50, width = 30; //heigth en width of sprite
+	final int personwalkingspeed = 5;
+	int jumpingspeed = 5;
+	boolean jumped = false;	
 	
-	public void Lava(int x,int y) {
-		this.x = x;
-		this.y = y;
-
-		try {
-			for (int i=0;i<25;i++) {
-				lavagif[i] = ImageIO.read(new File("Resources/Images/lava met bellengif Als "+Integer.toString(i+1)+"e.png"));
-			
-			}
-			} catch(IOException ex) {
-			System.out.println("gif load failed: lava");
-		}
+	public Person(int x,int y) {
+		super(x, y);
+		super.width = width;
+		super.height = height;
+		super.midx = (int) x + height / 2;
+		super.midy = (int) y + width / 2;
+		super.walkingspeed = personwalkingspeed;
 		
+		BufferedImage[] imagelist = new BufferedImage[9];
+		try {
+			imagelist[1] = ImageIO.read(Person.class.getResource("/Images/standingR(30x50).png"));
+			imagelist[2] = ImageIO.read(Person.class.getResource("/Images/running1R(34x43).png"));
+			imagelist[3] = ImageIO.read(Person.class.getResource("/Images/running2R(44x44).png"));			
+			imagelist[4] = ImageIO.read(Person.class.getResource("/Images/running3R(46x46).png"));	
+			imagelist[5] = ImageIO.read(Person.class.getResource("/Images/standingL(30x50).png"));
+			imagelist[6] = ImageIO.read(Person.class.getResource("/Images/running1L(34x43).png"));
+			imagelist[7] = ImageIO.read(Person.class.getResource("/Images/running2L(44x44).png"));			
+			imagelist[8] = ImageIO.read(Person.class.getResource("/Images/running3L(46x46).png"));	
+			imagelist[0] = imagelist[1];
+			
+			
+			/* image dimensions:
+			 * all Person sprites: (30*50)
+			 */
+			
+		} catch(IOException ex) {
+			System.out.println("personimage load failed");
+		}
+		super.imagelist = imagelist;
+	}
+
+	public void personmove(Portal Bportal,Portal Oportal, int tick,ArrayList<Block> blocklistactive ) {
+		if (!won && alive) {
+			Direction direction = move(Bportal,Oportal,tick,blocklistactive);
+			if (direction == Direction.Left && ((moveR || moveL))) {
+				speedx = 0;
+			} else if (direction == Direction.Right && ((moveR || moveL))) {
+				speedx = 0;
+			}
+			if (jumped) {
+				jumped = false;
+				super.speedy = -jumpingspeed;			
+			}
+		}
 	}
 	
-	public void Texture1(int x,int y) {
-		this.x = x;
-		this.y = y;
-
-		try {
-			walltexture = ImageIO.read(new File("Resources/Images/Light wall.png"));
-			} catch(IOException ex) {
-			System.out.println("image load failed: Light wall");
+	public void moveset(String direction) { //this method processes button presses
+		boolean changed = false;
+		if (direction == "right") {
+			moveR = true;
+			imagelist[0] = imagelist[1];
 		}
-
-	}
-	public void Texture2(int x,int y) {
-		this.x = x;
-		this.y = y;
-
-		try {
-			walltexture = ImageIO.read(new File("Resources/Images/texture2.png"));
-			} catch(IOException ex) {
-			System.out.println("image load texture2.png load failed: texture2");
+		if (direction == "left") {
+			moveL = true;
+			if (!changed) {
+				imagelist[0] = imagelist[4];
+			}
 		}
-
+		if (direction == "up" & isOnFloor) {
+			jumped = true;
+		}
+		if (direction == "down")
+			speedx = 0;
 	}
 	
-	public void Gatetexture(int x,int y) {
-		this.x = x;
-		this.y = y;
+	public void stop(String direction) { //button releases
+		if (direction == "right") {
+			moveR = false;
+			imagelist[0] = imagelist[1];
+		}
+		if (direction == "left") {
+			moveL = false;
+			imagelist[0] = imagelist[5];
+		}
+		if (Math.abs(speedx) <= 5 ) {
+			speedx = 0;
+		}
+	}
 
-		try {
-			if (upright) {
-				walltexture = ImageIO.read(new File("Resources\\Images\\GatewayVertical(50x50).png"));
+	public ArrayList<Point> shoot(int mouseX, int mouseY,int mousebutton,Portal Oportal, Portal Bportal,ArrayList<Block> blocklistactive) { //shooting code
+		ArrayList<Point> answ = new ArrayList<Point>();
+		Portal activeportal = null;
+		Portal otherportal = null;
+		if (mousebutton == 1) {
+			activeportal = Bportal;
+			otherportal = Oportal; }
+		else if (mousebutton == 3) {
+			activeportal = Oportal;
+			otherportal = Bportal; }
+		boolean hit = false; // will let now if a hitbox has been hit, stopping the while loop
+		boolean inverted = false; //will let new whether to increment/decrement x or y coords
+		double bulletX = midx,bulletY = midy; //bullet starts at middle if character
+		double prevBulletX,prevBulletY;
+		double rico = ((double)mouseY -(double)midy)/((double)mouseX-(double)midx);
+		if (Math.abs(rico) > 1) {
+			rico = Math.pow(rico, -1);
+			inverted = true;
+		}
+		while (!(hit || Tools.outOfBounds((int)bulletX, (int)bulletY))) {
+			/* This code draws a line between the center of the person and the point that was clicked. 
+			 * We calculate the rico using the coordinates of both points, then we decide to either 
+			 * increment the x or y value. If the rico is equal or below 1 we increment x otherwise 
+			 * we increment y and invert the rico. This is done so we won't make steps too big to miss
+			 * a hitbox. After each step we check if the line has hit a wall. If it has we spawn a portal
+			 * at the intersect point.*/
+			prevBulletX = bulletX;
+			prevBulletY = bulletY;
+			
+			if (!inverted) {
+				if (mouseX > midx) {
+					bulletX += 15;
+					bulletY += 15*rico;
+				} else if (mouseX < midx) {
+					bulletX -= 15;
+					bulletY -= 15*rico;
+				}
 			} else {
-				walltexture = ImageIO.read(new File("Resources\\\\Images\\\\GatewayHorizontal(50x50).png"));
-			}
-			} catch(IOException ex) {
-			System.out.println("image load failed: GatewayVertical");
-		}
-	}
-	
-
-	Block(int x,int y,Buttontype type) {
-		this.x = x;
-		this.y = y;
-		this.type = type;
-		int place;
-		try {
-			if(type.equals(Buttontype.Left)) {place = 0;}
-			else if (type.equals(Buttontype.Middle)) {place = 1;}
-			else {place = 2;}
-			buttontetexture[0] = ImageIO.read(new File("Resources/Images/buttonUnpressed"+Integer.toString(place)+".png"));
-			buttontetexture[1] = ImageIO.read(new File("Resources/Images/buttonPressed"+Integer.toString(place)+".png"));
-			} catch(IOException ex) {
-			System.out.println("image load failed: Button");
-		}
-		
-	}
-
-
-	
-	Block(int x, int y,int width,int height) {
-		this.x = x;
-		this.y = y;
-		this.width = width;
-		this.height = height;
-		
-		Texture1(x,y);
-		for (int i=0; i<width/50;i++) {
-			for (int j=0; j<height/50;j++) {
-			Games.level.add(new Block(x+i*50,y+j*50,0,50));
-			}
-		}
-		
-	}
-	Block(int x, int y,int width,int height,Blocktype special) {
-		this.x = x;
-		this.y = y;
-		this.width = width;
-		this.height = height;
-		
-		this.special = special;
-		if (special == Blocktype.Endzone) {//finish, end of level
-			this.color = Colors.nuclearGreen;
-			portalable = false;
-			try {finish = ImageIO.read(new File("Resources/Images/Finish.png"));
-				} catch(IOException ex) {System.out.println("image load failed: Finish");}
-		} else if (special == Blocktype.Lava) {//lava, kills Chell
-			Lava(x,y);
-			for (int i=0; i<width/50;i++) {
-				Games.level.add(new Block(x+i*50,y,0,50,Blocktype.Lava));
-				portalable = false;
-			}
-		
-			
-		} else if (special== Blocktype.Allergic) {//floors that don't take portals
-			Texture2(x,y);
-			for (int i=0; i<width/50;i++) {
-				for (int j=0; j<height/50;j++) {
-					Games.level.add(new Block(x+i*50,y+j*50,0,50,Blocktype.Allergic));
+				if (mouseY > midy) {
+					bulletY += 15;
+					bulletX += 15*rico;
+				} else if (mouseY < midy) {
+					bulletY -= 15;
+					bulletX -= 15*rico;
 				}
 			}
-			portalable = false;
-		} else if (special == Blocktype.Button) {//it's a button
-			portalable = false;
-			Games.level.add(new Block(x,y,Buttontype.Left));
-			for(int i=0;i<(width-20)/30;i++) {
-				Games.level.add(new Block(x+10+i*30,y,Buttontype.Middle));
-			}
-			if(!((width-20)%30 == 0)) {
-				Games.level.add(new Block(x+width-40,y,Buttontype.Middle));
-			}
-			Games.level.add(new Block(x+width-10,y,Buttontype.Right));
-		} else if (special == Blocktype.ButtonListener) {//changes if isOnButton is active
-			if (height>width) {
-				this.upright = true;
-			} else {
-				this.upright = false;
-			}
-			Games.level.add(new Block(x,y,width,height,upright));
-	}
-	}
-		
-	
-
-	Block(int x, int y,int width,int height,boolean upright) {
-		this.x = x;
-		this.y = y;
-		this.width = width;
-		this.height = height;
-		this.upright = upright;
-		this.special = Blocktype.ButtonListener;
-		Gatetexture(x,y);
-		for (int i=0; i<height/50;i++) {
-			for (int j=0;j<width/50;j++) {
-				Games.level.add(new Block(x+j*50,y+i*50,0,0,upright));
+			answ.add(new Point((int)bulletX,(int)bulletY));
+			for (int i = 0; i <blocklistactive.size();i++ ) {
+				if(!(blocklistactive.get(i).special == Blocktype.ButtonListener && Mainpanel.someoneOnButton)) {
+					if (Tools.pointIntersect((int)bulletX,(int) bulletY, blocklistactive.get(i).x, blocklistactive.get(i).y, blocklistactive.get(i).width, blocklistactive.get(i).height)) {
+						Direction orientation = blocklistactive.get(i).intersect(new Point(prevBulletX,prevBulletY),0); 
+						hit = true;
+						if (blocklistactive.get(i).portalable == false) {//if you can't put a portal on this floor
+							break;
+						} else if (orientation == Direction.Up) {
+							activeportal.spawn((int)bulletX,blocklistactive.get(i).y,orientation,blocklistactive.get(i),otherportal);
+						} else if (orientation == Direction.Down) {
+							activeportal.spawn((int)bulletX,blocklistactive.get(i).y+blocklistactive.get(i).height,orientation,blocklistactive.get(i),otherportal);
+						} else if (orientation == Direction.Right) {
+							activeportal.spawn(blocklistactive.get(i).x+blocklistactive.get(i).width,(int)bulletY,orientation,blocklistactive.get(i),otherportal);
+						} else if (orientation == Direction.Left) {
+							activeportal.spawn(blocklistactive.get(i).x,(int)bulletY,orientation,blocklistactive.get(i),otherportal);
+						}
+					}
 				}
 			}
-		portalable = false;
 		}
-	
-	public Direction intersect(Point point,int targetheight) {
-		if (point.y+targetheight <= y) {
-			return Direction.Up;
-		} else if (point.y >= y+height) {
-			return Direction.Down;
-		} else if (point.x < x+width/2) {
-			return Direction.Left;
-		} else {
-			return Direction.Right;
-		}
+		return answ;	
 	}
 	
-	public void draw(Graphics g,int tick) {
-		if (special.equals(Blocktype.ButtonListener) && Mainpanel.someoneOnButton) {}
-		else if(special.equals(Blocktype.Button)) {}
-		else if(type.equals(Buttontype.Left)||type.equals(Buttontype.Middle)||type.equals(Buttontype.Right)) {
-			int pressed = 0;
-			if(Mainpanel.someoneOnButton) {
-				pressed = 1;
-			}
-			g.drawImage(buttontetexture[pressed],x,y-5+5*pressed,null);
-			
-		}
-		else if (special.equals(Blocktype.Lava)) {		
-			if((tick-time) % 2 == 0) {
-				gifcounter++;
-			}
-			if (gifcounter >= 25) {
-				gifcounter = 0;
-				time = tick;
-			}
-			g.drawImage(lavagif[gifcounter],x,y,null);
-		} else if (color.equals(Colors.lightGrey)) {
-			g.drawImage(walltexture, x, y, null);
-		} else if(special.equals(Blocktype.Endzone)) {
-			g.drawImage(finish,x+width*2/7,y-49,null);
-			g.setColor(color);
-			g.fillRect(x, y, width, height);
-		} else {
-		g.setColor(color);
-		g.fillRect(x, y, width, height);
-		}
+	public void persondraw(Graphics g) {
+		g.drawImage(imagelist[0],x,y,null); //simple draw method
+		if (won) {
+	        	g.setFont(new Font("verdana", 3, 100));
+	        	g.setColor(Colors.lightGrey);
+	        	g.drawString("You won",200,300);
+	        	g.setFont(new Font("verdana", 2, 30));
+	        	g.drawString("Press Enter to continue", 200, 350);
+	        	//System.out.println("To go to the next level, press enter.");
+	        	//enter.hasNextLine();
+	        }
+	        if (!alive) {
+	        	g.setFont(new Font("arial", 1, 100));
+	        	g.setColor(Colors.lavaRed);
+	        	g.drawString("You died", 200, 300);
+	        	g.setFont(new Font("verdana", 2, 30));
+	        	g.drawString("Press Enter to restart", 200, 350);
+	        	//System.out.println("To revive, press enter.");
+	        	//enter.hasNextLine();
+	        	//reset();
+	        	//alive = true;
+	        }
 	}
-	
 }
+
+
+
+
+
+	
